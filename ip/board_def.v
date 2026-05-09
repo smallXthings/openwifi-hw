@@ -6,6 +6,13 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// RF isolation: rf-b keeps rf-a behavior while Vivado inserts AXI-Lite register slices.
+`ifdef OW_PROFILE_NB10_RF_B
+`ifndef OW_PROFILE_NB10_RF_A
+`define OW_PROFILE_NB10_RF_A 1
+`endif
+`endif
+
 // RF isolation: timing-e baseline with 10 MHz FPGA sample cadence.
 `ifdef OW_PROFILE_NB10_RF_A
 `ifndef OW_PROFILE_NB10_TIMING_E

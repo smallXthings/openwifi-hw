@@ -55,8 +55,10 @@ if {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_TIMING_E 1}
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-a"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_RF_A 1}
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-b"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10_RF_B 1}
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE ne "ow-stock-20"} {
-  error "Unsupported FSIGHT_OPENWIFI_PHY_PROFILE '$FSIGHT_OPENWIFI_PHY_PROFILE'. Expected ow-stock-20, ow-nb-10, ow-nb-10-timing-a, ow-nb-10-timing-b, ow-nb-10-timing-c, ow-nb-10-timing-d, ow-nb-10-timing-e, or ow-nb-10-rf-a."
+  error "Unsupported FSIGHT_OPENWIFI_PHY_PROFILE '$FSIGHT_OPENWIFI_PHY_PROFILE'. Expected ow-stock-20, ow-nb-10, ow-nb-10-timing-a, ow-nb-10-timing-b, ow-nb-10-timing-c, ow-nb-10-timing-d, ow-nb-10-timing-e, ow-nb-10-rf-a, or ow-nb-10-rf-b."
 }
 if {[llength $board_def_preamble] > 0} {
   set fd [open "./ip_repo/board_def.v" r]
