@@ -2,6 +2,7 @@
 // Xianjun jiao. putaoshu@msn.com; xianjun.jiao@imec.be;
 
 `timescale 1 ns / 1 ps
+`include "board_def.v"
 
 	module tx_intf_s_axi #
 	(
@@ -295,7 +296,46 @@
 	// Slave register write enable is asserted when valid address and data are available
 	// and the slave is ready to accept the write address and write data.
 	assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
-	assign axi_awaddr_core = axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB];
+
+`ifdef OW_AXI_LITE_LOCAL_WRITE_PIPELINE
+	reg [C_S_AXI_DATA_WIDTH-1 : 0] axi_wdata_for_write_r;
+	reg [(C_S_AXI_DATA_WIDTH/8)-1 : 0] axi_wstrb_for_write_r;
+	reg [C_S_AXI_ADDR_WIDTH-1 : 0] axi_awaddr_for_write_r;
+	reg slv_reg_wren_for_write_r;
+
+	always @( posedge S_AXI_ACLK )
+	begin
+	  if ( S_AXI_ARESETN == 1'b0 )
+	    begin
+	      axi_wdata_for_write_r <= 0;
+	      axi_wstrb_for_write_r <= 0;
+	      axi_awaddr_for_write_r <= 0;
+	      slv_reg_wren_for_write_r <= 1'b0;
+	    end
+	  else
+	    begin
+	      slv_reg_wren_for_write_r <= slv_reg_wren;
+	      if (slv_reg_wren)
+	        begin
+	          axi_wdata_for_write_r <= S_AXI_WDATA;
+	          axi_wstrb_for_write_r <= S_AXI_WSTRB;
+	          axi_awaddr_for_write_r <= axi_awaddr;
+	        end
+	    end
+	end
+
+	wire slv_reg_wren_for_write = slv_reg_wren_for_write_r;
+	wire [C_S_AXI_DATA_WIDTH-1 : 0] axi_wdata_for_write = axi_wdata_for_write_r;
+	wire [(C_S_AXI_DATA_WIDTH/8)-1 : 0] axi_wstrb_for_write = axi_wstrb_for_write_r;
+	wire [C_S_AXI_ADDR_WIDTH-1 : 0] axi_awaddr_for_write = axi_awaddr_for_write_r;
+`else
+	wire slv_reg_wren_for_write = slv_reg_wren;
+	wire [C_S_AXI_DATA_WIDTH-1 : 0] axi_wdata_for_write = S_AXI_WDATA;
+	wire [(C_S_AXI_DATA_WIDTH/8)-1 : 0] axi_wstrb_for_write = S_AXI_WSTRB;
+	wire [C_S_AXI_ADDR_WIDTH-1 : 0] axi_awaddr_for_write = axi_awaddr;
+`endif
+
+	assign axi_awaddr_core = axi_awaddr_for_write[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB];
 
 	always @( posedge S_AXI_ACLK )
 	begin
@@ -324,233 +364,233 @@
 	      //slv_reg19 <= 32'h0;
 	    end 
 	  else begin
-		slv_reg_wren_delay <= slv_reg_wren;
-	    if (slv_reg_wren)
+		slv_reg_wren_delay <= slv_reg_wren_for_write;
+	    if (slv_reg_wren_for_write)
 	      begin
-	        case ( axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
+	        case ( axi_awaddr_for_write[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
 	          5'h00:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 0
-	                slv_reg0[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg0[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h01:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 1
-	                slv_reg1[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg1[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h02:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 2
-	                slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg2[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	        //   5'h03:
 	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	        //       if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	        //         // Respective byte enables are asserted as per write strobes 
 	        //         // Slave register 3
-	        //         slv_reg3[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	        //         slv_reg3[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	        //       end  
 	          5'h04:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 4
-	                slv_reg4[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg4[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h05:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 5
-	                slv_reg5[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg5[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h06:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 6
-	                slv_reg6[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg6[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h07:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 7
-	                slv_reg7[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg7[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h08:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 8
-	                slv_reg8[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg8[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h09:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 9
-	                slv_reg9[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg9[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0A:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 10
-	                slv_reg10[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg10[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0B:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 11
-	                slv_reg11[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg11[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0C:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 12
-	                slv_reg12[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg12[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0D:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 13
-	                slv_reg13[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg13[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0E:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 14
-	                slv_reg14[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg14[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h0F:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 15
-	                slv_reg15[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg15[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h10:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 16
-	                slv_reg16[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg16[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h11:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 17
-	                slv_reg17[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg17[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  /*
 	          5'h12:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 18
-	                slv_reg18[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                slv_reg18[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end
 	          5'h13:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 19
-	                //slv_reg19[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg19[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end
 	          5'h14:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 20
-	                //slv_reg20[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg20[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end   */
 	          5'h15:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 21
-	                //slv_reg21[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg21[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h16:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 22
-	                //slv_reg22[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg22[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h17:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 23
-	                //slv_reg23[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg23[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h18:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 24
-	                //slv_reg24[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg24[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end
 	          5'h19:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 25
-	                //slv_reg25[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg25[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h1A:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 26
-	                //slv_reg26[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg26[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  /*
 	          5'h1B:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 27
-	                //slv_reg27[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg27[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h1C:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 28
-	                //slv_reg28[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg28[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h1D:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 29
-	                //slv_reg29[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg29[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end  
 	          5'h1E:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 30
-	                //slv_reg30[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg30[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end 
 	          5'h1F:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	              if ( axi_wstrb_for_write[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 31
-	                //slv_reg31[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                //slv_reg31[(byte_index*8) +: 8] <= axi_wdata_for_write[(byte_index*8) +: 8];
 	              end */
 	          default : begin
 	                      slv_reg0 <= slv_reg0;

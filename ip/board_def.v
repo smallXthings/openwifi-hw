@@ -6,6 +6,17 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// RF isolation: rf-c keeps rf-a behavior and locally pipelines AXI-Lite write data
+// inside route-dominant OpenWiFi control slaves instead of broad interconnect slicing.
+`ifdef OW_PROFILE_NB10_RF_C
+`ifndef OW_PROFILE_NB10_RF_A
+`define OW_PROFILE_NB10_RF_A 1
+`endif
+`ifndef OW_AXI_LITE_LOCAL_WRITE_PIPELINE
+`define OW_AXI_LITE_LOCAL_WRITE_PIPELINE 1
+`endif
+`endif
+
 // RF isolation: rf-b keeps rf-a behavior while Vivado inserts AXI-Lite register slices.
 `ifdef OW_PROFILE_NB10_RF_B
 `ifndef OW_PROFILE_NB10_RF_A
