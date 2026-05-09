@@ -6,6 +6,16 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// Timing-closure isolation: timing-e keeps timing-d and pipelines RX IQ rate-control feedback.
+`ifdef OW_PROFILE_NB10_TIMING_E
+`ifndef OW_PROFILE_NB10_TIMING_D
+`define OW_PROFILE_NB10_TIMING_D 1
+`endif
+`ifndef OW_RX_IQ_PIPELINE_DATA_COUNT
+`define OW_RX_IQ_PIPELINE_DATA_COUNT 1
+`endif
+`endif
+
 // Timing-closure isolation: timing-d keeps timing-c and re-enables RX IQ rate adaptation.
 `ifdef OW_PROFILE_NB10_TIMING_D
 `ifndef OW_PROFILE_NB10_TIMING_C

@@ -83,6 +83,12 @@
     wire wren;
     wire bb_en;
     wire [5:0] data_count;
+`ifdef OW_RX_IQ_PIPELINE_DATA_COUNT
+    reg [5:0] data_count_rate;
+    wire [5:0] data_count_for_rate;
+`else
+    wire [5:0] data_count_for_rate;
+`endif
     wire [((4*IQ_DATA_WIDTH)-1):0] data_selected;
     wire wren_selected;
     reg [4:0] counter;
@@ -149,9 +155,24 @@
     assign wren = wren_selected&fifo_in_en;
     assign rf_iq_valid = ( (rf_iq_valid_delay_sel==1'b0)? rf_iq_valid_reg : rden);
     assign wifi_rx_iq_fifo_emptyn = (~empty);
+`ifdef OW_RX_IQ_PIPELINE_DATA_COUNT
+    assign data_count_for_rate = data_count_rate;
+`else
+    assign data_count_for_rate = data_count;
+`endif
 
     // assign fractional_flag = (num_clk_per_us_new != num_clk_per_us);
     assign fractional_flag = ((`NUM_CLK_PER_SAMPLE*`SAMPLING_RATE_MHZ) != `NUM_CLK_PER_US);
+
+`ifdef OW_RX_IQ_PIPELINE_DATA_COUNT
+    always @( posedge clk )
+    begin
+      if ( rstn == 0 )
+        data_count_rate <= 0;
+      else
+        data_count_rate <= data_count;
+    end
+`endif
     
     // rate control to make sure ofdm rx get I/Q as uniform as possible
     always @( posedge clk )
@@ -163,16 +184,16 @@
         if (counter == 0) begin // do the check and action when an I/Q is read
           counter_top_flag <= (~counter_top_flag);
           if (fractional_flag) begin
-            if (data_count<11) // if less amount of data in fifo, read slower by making counter period longer
+            if (data_count_for_rate<11) // if less amount of data in fifo, read slower by making counter period longer
               counter_top <= (`COUNT_TOP_BB+1);
-            else if (data_count<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
+            else if (data_count_for_rate<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
               counter_top <= (counter_top_flag?(`COUNT_TOP_BB):(`COUNT_TOP_BB+1));
             else // if more amount of data in fifo, read faster by making counter period shorter
               counter_top <= (`COUNT_TOP_BB);
           end else begin
-            if (data_count<11) // if less amount of data in fifo, read slower by making counter period longer
+            if (data_count_for_rate<11) // if less amount of data in fifo, read slower by making counter period longer
               counter_top <= (`COUNT_TOP_BB+1);
-            else if (data_count<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
+            else if (data_count_for_rate<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
               counter_top <= `COUNT_TOP_BB;
             else // if more amount of data in fifo, read faster by making counter period shorter
               counter_top <= (`COUNT_TOP_BB-1);
