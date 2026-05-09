@@ -89,6 +89,15 @@
 `else
     wire [5:0] data_count_for_rate;
 `endif
+`ifdef OW_RX_IQ_PIPELINE_RATE_THRESH
+    reg data_count_lt_11_rate;
+    reg data_count_lt_22_rate;
+    wire data_count_lt_11;
+    wire data_count_lt_22;
+`else
+    wire data_count_lt_11;
+    wire data_count_lt_22;
+`endif
     wire [((4*IQ_DATA_WIDTH)-1):0] data_selected;
     wire wren_selected;
     reg [4:0] counter;
@@ -160,6 +169,13 @@
 `else
     assign data_count_for_rate = data_count;
 `endif
+`ifdef OW_RX_IQ_PIPELINE_RATE_THRESH
+    assign data_count_lt_11 = data_count_lt_11_rate;
+    assign data_count_lt_22 = data_count_lt_22_rate;
+`else
+    assign data_count_lt_11 = (data_count_for_rate<11);
+    assign data_count_lt_22 = (data_count_for_rate<22);
+`endif
 
     // assign fractional_flag = (num_clk_per_us_new != num_clk_per_us);
     assign fractional_flag = ((`NUM_CLK_PER_SAMPLE*`SAMPLING_RATE_MHZ) != `NUM_CLK_PER_US);
@@ -173,6 +189,18 @@
         data_count_rate <= data_count;
     end
 `endif
+`ifdef OW_RX_IQ_PIPELINE_RATE_THRESH
+    always @( posedge clk )
+    begin
+      if ( rstn == 0 ) begin
+        data_count_lt_11_rate <= 1'b1;
+        data_count_lt_22_rate <= 1'b1;
+      end else begin
+        data_count_lt_11_rate <= (data_count_for_rate<11);
+        data_count_lt_22_rate <= (data_count_for_rate<22);
+      end
+    end
+`endif
     
     // rate control to make sure ofdm rx get I/Q as uniform as possible
     always @( posedge clk )
@@ -184,16 +212,16 @@
         if (counter == 0) begin // do the check and action when an I/Q is read
           counter_top_flag <= (~counter_top_flag);
           if (fractional_flag) begin
-            if (data_count_for_rate<11) // if less amount of data in fifo, read slower by making counter period longer
+            if (data_count_lt_11) // if less amount of data in fifo, read slower by making counter period longer
               counter_top <= (`COUNT_TOP_BB+1);
-            else if (data_count_for_rate<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
+            else if (data_count_lt_22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
               counter_top <= (counter_top_flag?(`COUNT_TOP_BB):(`COUNT_TOP_BB+1));
             else // if more amount of data in fifo, read faster by making counter period shorter
               counter_top <= (`COUNT_TOP_BB);
           end else begin
-            if (data_count_for_rate<11) // if less amount of data in fifo, read slower by making counter period longer
+            if (data_count_lt_11) // if less amount of data in fifo, read slower by making counter period longer
               counter_top <= (`COUNT_TOP_BB+1);
-            else if (data_count_for_rate<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
+            else if (data_count_lt_22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
               counter_top <= `COUNT_TOP_BB;
             else // if more amount of data in fifo, read faster by making counter period shorter
               counter_top <= (`COUNT_TOP_BB-1);
