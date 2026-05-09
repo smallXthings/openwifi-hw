@@ -6,6 +6,16 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// RF isolation: timing-e baseline with 10 MHz FPGA sample cadence.
+`ifdef OW_PROFILE_NB10_RF_A
+`ifndef OW_PROFILE_NB10_TIMING_E
+`define OW_PROFILE_NB10_TIMING_E 1
+`endif
+`ifndef OW_SAMPLING_RATE_MHZ
+`define OW_SAMPLING_RATE_MHZ    10
+`endif
+`endif
+
 // Timing-closure isolation: timing-e keeps timing-d and pipelines RX IQ rate-control feedback.
 `ifdef OW_PROFILE_NB10_TIMING_E
 `ifndef OW_PROFILE_NB10_TIMING_D
