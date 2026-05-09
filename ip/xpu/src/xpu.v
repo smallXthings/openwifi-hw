@@ -1,5 +1,6 @@
 // Xianjun jiao. putaoshu@msn.com; xianjun.jiao@imec.be;
 `include "openwifi_hw_git_rev.v"
+`include "board_def.v"
 `include "xpu_pre_def.v"
 
 `ifdef XPU_ENABLE_DBG
@@ -217,8 +218,8 @@ module xpu #
   wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg57;//temp reg for rssi readback during idle. in the future we should use sdpram to read back multiple info (selected by addr writing signal) via single register
   wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg58;//tsf timer low
   wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg59;//tsf timer high
-  //wire [C_S00_AXI_DATA_WIDTH-1:0]	slv_reg60;
-  //wire [C_S00_AXI_DATA_WIDTH-1:0]	slv_reg61;
+  wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg60;//F-Sight/OpenWiFi PHY profile ID
+  wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg61;//F-Sight/OpenWiFi PHY profile metadata
   wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg62;//mac addr read back to decide how to set addr field correctly (big or little endian, etc.)
   wire [(C_S00_AXI_DATA_WIDTH-1):0]	slv_reg63;//FPGA version info
 
@@ -286,7 +287,11 @@ module xpu #
   wire ack_cts_is_ongoing;
 
   wire [14:0] n_bit_in_last_sym_tmp;
+`ifdef OW_XPU_PIPELINE_REL_DECODING_LATENCY
+  reg [6:0]  relative_decoding_latency; //(0.1us resolution. same as send_ack_wait_top)
+`else
   wire [6:0]  relative_decoding_latency; //(0.1us resolution. same as send_ack_wait_top)
+`endif
   wire [14:0] send_ack_wait_top;
   wire [14:0] recv_ack_timeout_top_adj;
   wire [14:0] recv_ack_sig_valid_timeout_top;
@@ -295,7 +300,7 @@ module xpu #
   wire       erp_short_slot;
   wire [6:0] preamble_sig_time;
   wire [4:0] ofdm_symbol_time;
-  wire [4:0] slot_time;
+  wire [6:0] slot_time;
   wire [6:0] sifs_time;
   wire [6:0] phy_rx_start_delay_time;
 
@@ -322,20 +327,31 @@ module xpu #
 
   assign cw_exp_used = (cw_en?cw_exp_dynamic:slv_reg6[19:16]);
   assign cw = cw_exp_log;
+  assign slv_reg60 = `OW_PROFILE_ID;
+  assign slv_reg61 = `OW_PROFILE_META;
   assign slv_reg63 = `OPENWIFI_HW_GIT_REV;
 
   assign erp_short_slot = slv_reg4[24];
   assign band = slv_reg4[19:16];
   assign channel = slv_reg4[15:0];
 
-  assign preamble_sig_time =       (slv_reg9[31]?slv_reg9[30:24]:20);
-  assign ofdm_symbol_time =        (slv_reg9[31]?slv_reg9[23:19]:4);
-  assign slot_time =               (slv_reg9[31]?slv_reg9[18:14]:(band==1?(erp_short_slot?9:20):9));
-  assign sifs_time =               (slv_reg9[31]?slv_reg9[13:7] :(band==1?10:16));
-  assign phy_rx_start_delay_time = (slv_reg9[31]?slv_reg9[6:0]  :(band==1?24:25));//802.11-2012. Table 19-8—ERP characteristics
+  assign preamble_sig_time =       (slv_reg9[31]?slv_reg9[30:24]:`OW_PREAMBLE_SIGNAL_US);
+  assign ofdm_symbol_time =        (slv_reg9[31]?slv_reg9[23:19]:`OW_OFDM_SYMBOL_US);
+  assign slot_time =               (slv_reg9[31]?{2'd0, slv_reg9[18:14]}:(band==1?(erp_short_slot?`OW_SLOT_SHORT_US:`OW_SLOT_LONG_US):`OW_SLOT_SHORT_US));
+  assign sifs_time =               (slv_reg9[31]?slv_reg9[13:7] :(band==1?`OW_SIFS_2G_US:`OW_SIFS_5G_US));
+  assign phy_rx_start_delay_time = (slv_reg9[31]?slv_reg9[6:0]  :(band==1?`OW_PHY_RX_START_DELAY_2G_US:`OW_PHY_RX_START_DELAY_5G_US));//802.11-2012. Table 19-8 ERP characteristics
 
-  assign n_bit_in_last_sym_tmp = n_bit_in_last_sym*25;
+  assign n_bit_in_last_sym_tmp = n_bit_in_last_sym*`OW_REL_DECODING_LATENCY_MUL;
+`ifdef OW_XPU_PIPELINE_REL_DECODING_LATENCY
+  always @(posedge s00_axi_aclk) begin
+    if (!s00_axi_aresetn)
+      relative_decoding_latency <= 0;
+    else
+      relative_decoding_latency <= n_bit_in_last_sym_tmp[14:8];
+  end
+`else
   assign relative_decoding_latency = n_bit_in_last_sym_tmp[14:8];
+`endif
   assign send_ack_wait_top = (band==1?slv_reg18[14:0]:slv_reg18[30:16]); //band==1: 2.4GHz
 
   assign recv_ack_timeout_top_adj = (band==1?slv_reg16[14:0]:slv_reg17[14:0]);
@@ -858,11 +874,10 @@ xpu_s_axi # (
   .SLV_REG57(slv_reg57),
   .SLV_REG58(slv_reg58),
   .SLV_REG59(slv_reg59),
-  //.SLV_REG60(slv_reg60),
-  //.SLV_REG61(slv_reg61),
+  .SLV_REG60(slv_reg60),
+  .SLV_REG61(slv_reg61),
   .SLV_REG62(slv_reg62),
   .SLV_REG63(slv_reg63)
 );
 
 endmodule
-

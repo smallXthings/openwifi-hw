@@ -39,7 +39,7 @@
     `DEBUG_PREFIX input wire [3:0] cw_exp_used,
     input wire [6:0] preamble_sig_time,
     input wire [4:0] ofdm_symbol_time,
-    input wire [4:0] slot_time,
+    input wire [6:0] slot_time,
     input wire [6:0] sifs_time,
     input wire [6:0] phy_rx_start_delay_time,
     input wire [7:0] difs_advance,
@@ -86,7 +86,7 @@
                       NAV_CHECK_RA =          2'b10,
                       NAV_UPDATE =            2'b11;
 
-    localparam [11:0] longest_ack_time = 44;
+    wire [11:0] longest_ack_time;
 
     `DEBUG_PREFIX reg [2:0]  backoff_state;
 
@@ -124,7 +124,7 @@
     `DEBUG_PREFIX reg [9:0] num_slot_random_log_dl_int;
 
     reg  [15:0] num_slot_random_times_slot_time_minus_backoff_advance;
-    wire [7:0] sifs_time_plus_2slot;
+    wire [11:0] sifs_time_plus_2slot;
 
     reg  [11:0] eifs_time_used;
     reg  [11:0] difs_time_used;
@@ -138,9 +138,10 @@
     assign is_rts    = (((FC_type==2'b01) && (FC_subtype==4'b1011) && (signal_len==20))?1:0);//20 is the length of rts frame
 
     assign ackcts_time = preamble_sig_time + ofdm_symbol_time*ackcts_n_sym;
+    assign longest_ack_time = {4'd0, ackcts_time};
     assign nav_for_mac = (nav_enable?nav:0);
     
-    assign sifs_time_plus_2slot = {1'b0, sifs_time} + {2'd0, slot_time, 1'b0};
+    assign sifs_time_plus_2slot = {5'd0, sifs_time} + {4'd0, slot_time, 1'b0};
     assign difs_time = ( difs_enable?sifs_time_plus_2slot:0 );
     
     assign ch_idle_final = (ch_idle&&(nav_for_mac==0));

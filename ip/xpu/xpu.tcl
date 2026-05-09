@@ -93,7 +93,11 @@ puts "ARGUMENT7 $MODULE_NAME\_$ARGUMENT7"
 set  fd  [open  "./src/clock_speed.v"  w]
 puts $fd "`define NUM_CLK_PER_US $NUM_CLK_PER_US"
 close $fd
-file copy -force ../board_def.v ./src/board_def.v
+set board_def_file "../board_def.v"
+if {[info exists ::env(FSIGHT_OPENWIFI_BOARD_DEF)]} {
+  set board_def_file $::env(FSIGHT_OPENWIFI_BOARD_DEF)
+}
+file copy -force $board_def_file ./src/board_def.v
 # ----end of generate clock_speed.v---------------
 
 # -----------generate openwifi_hw_git_rev.v---------------

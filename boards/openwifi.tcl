@@ -6,6 +6,11 @@
 
 # https://adaptivesupport.amd.com/s/article/000034290?language=en_US
 set_param gui.addressMap 0
+if {[info exists ::env(FSIGHT_VIVADO_MAX_THREADS)] && [string trim $::env(FSIGHT_VIVADO_MAX_THREADS)] ne ""} {
+  set FSIGHT_VIVADO_MAX_THREADS [string trim $::env(FSIGHT_VIVADO_MAX_THREADS)]
+  puts "openwifi.tcl FSIGHT_VIVADO_MAX_THREADS $FSIGHT_VIVADO_MAX_THREADS"
+  set_param general.maxThreads $FSIGHT_VIVADO_MAX_THREADS
+}
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."
@@ -299,13 +304,60 @@ set_property -name "xsim.simulate.xsim.more_options" -value "" -objects $obj
 source ./synth_impl_strategy.tcl
 source ./../post_script_common.tcl
 
+set FSIGHT_VIVADO_TO_STEP "write_bitstream"
+if {[info exists ::env(FSIGHT_VIVADO_TO_STEP)] && [string trim $::env(FSIGHT_VIVADO_TO_STEP)] ne ""} {
+  set FSIGHT_VIVADO_TO_STEP [string trim $::env(FSIGHT_VIVADO_TO_STEP)]
+}
+set FSIGHT_VIVADO_VALID_STEPS {
+  init_design
+  opt_design
+  power_opt_design
+  place_design
+  post_place_power_opt_design
+  phys_opt_design
+  route_design
+  post_route_phys_opt_design
+  write_bitstream
+}
+if {$FSIGHT_VIVADO_TO_STEP ni $FSIGHT_VIVADO_VALID_STEPS} {
+  error "Unsupported FSIGHT_VIVADO_TO_STEP '$FSIGHT_VIVADO_TO_STEP'. Expected one of: $FSIGHT_VIVADO_VALID_STEPS"
+}
+puts "openwifi.tcl FSIGHT_VIVADO_TO_STEP $FSIGHT_VIVADO_TO_STEP"
+
+set FSIGHT_VIVADO_FAST_TIMING_REPORTS "0"
+if {[info exists ::env(FSIGHT_VIVADO_FAST_TIMING_REPORTS)] && [string trim $::env(FSIGHT_VIVADO_FAST_TIMING_REPORTS)] ne ""} {
+  set FSIGHT_VIVADO_FAST_TIMING_REPORTS [string tolower [string trim $::env(FSIGHT_VIVADO_FAST_TIMING_REPORTS)]]
+}
+if {$FSIGHT_VIVADO_FAST_TIMING_REPORTS ni {"0" "1" "false" "true"}} {
+  error "Unsupported FSIGHT_VIVADO_FAST_TIMING_REPORTS '$FSIGHT_VIVADO_FAST_TIMING_REPORTS'. Expected 0/1 or false/true."
+}
+if {$FSIGHT_VIVADO_FAST_TIMING_REPORTS in {"1" "true"}} {
+  foreach report_name {
+    impl_1_place_report_timing_summary_0
+    impl_1_phys_opt_report_timing_summary_0
+  } {
+    set report_config [get_report_configs -quiet -of_objects [get_runs impl_1] $report_name]
+    if {$report_config ne ""} {
+      set_property -name "is_enabled" -value "1" -objects $report_config
+    }
+  }
+}
+
 # https://adaptivesupport.amd.com/s/article/000034290?language=en_US
 set_param gui.addressMap 0
 
 update_compile_order -fileset sources_1
-launch_runs impl_1 -to_step write_bitstream -jobs 8
+set FSIGHT_VIVADO_JOBS 8
+if {[info exists ::env(FSIGHT_VIVADO_JOBS)]} {
+  set FSIGHT_VIVADO_JOBS $::env(FSIGHT_VIVADO_JOBS)
+}
+launch_runs impl_1 -to_step $FSIGHT_VIVADO_TO_STEP -jobs $FSIGHT_VIVADO_JOBS
 
 wait_on_run impl_1
 
 update_compile_order -fileset sources_1
-write_hw_platform -fixed -include_bit -force -file ./openwifi_$BOARD_NAME/system_top.xsa
+if {$FSIGHT_VIVADO_TO_STEP eq "write_bitstream"} {
+  write_hw_platform -fixed -include_bit -force -file ./openwifi_$BOARD_NAME/system_top.xsa
+} else {
+  puts "openwifi.tcl skipping write_hw_platform because FSIGHT_VIVADO_TO_STEP is $FSIGHT_VIVADO_TO_STEP"
+}

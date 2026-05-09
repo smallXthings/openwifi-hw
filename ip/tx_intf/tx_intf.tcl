@@ -96,7 +96,11 @@ if {$fpga_size_flag == 0} {
   puts $fd "`define SMALL_FPGA 1"
 }
 close $fd
-file copy -force ../board_def.v ./src/board_def.v
+set board_def_file "../board_def.v"
+if {[info exists ::env(FSIGHT_OPENWIFI_BOARD_DEF)]} {
+  set board_def_file $::env(FSIGHT_OPENWIFI_BOARD_DEF)
+}
+file copy -force $board_def_file ./src/board_def.v
 # ----end of generate clock_speed.v---------------
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)

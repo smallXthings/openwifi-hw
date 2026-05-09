@@ -15,6 +15,56 @@ exec rm -rf ip_repo
 exec mkdir ip_repo
 exec cp ../../ip/board_def.v ./ip_repo/ -f
 
+set FSIGHT_OPENWIFI_PHY_PROFILE "ow-stock-20"
+if {[info exists ::env(FSIGHT_OPENWIFI_PHY_PROFILE)]} {
+  set FSIGHT_OPENWIFI_PHY_PROFILE [string trim $::env(FSIGHT_OPENWIFI_PHY_PROFILE)]
+}
+if {$FSIGHT_OPENWIFI_PHY_PROFILE eq ""} {
+  set FSIGHT_OPENWIFI_PHY_PROFILE "ow-stock-20"
+}
+set FSIGHT_OPENWIFI_RX_IQ_BYPASS "0"
+if {[info exists ::env(FSIGHT_OPENWIFI_RX_IQ_BYPASS)]} {
+  set FSIGHT_OPENWIFI_RX_IQ_BYPASS [string tolower [string trim $::env(FSIGHT_OPENWIFI_RX_IQ_BYPASS)]]
+}
+if {$FSIGHT_OPENWIFI_RX_IQ_BYPASS eq ""} {
+  set FSIGHT_OPENWIFI_RX_IQ_BYPASS "0"
+}
+if {$FSIGHT_OPENWIFI_RX_IQ_BYPASS ni {"0" "1" "false" "true"}} {
+  error "Unsupported FSIGHT_OPENWIFI_RX_IQ_BYPASS '$FSIGHT_OPENWIFI_RX_IQ_BYPASS'. Expected 0/1 or false/true."
+}
+puts "ip_repo_gen.tcl FSIGHT_OPENWIFI_PHY_PROFILE $FSIGHT_OPENWIFI_PHY_PROFILE"
+puts "ip_repo_gen.tcl FSIGHT_OPENWIFI_RX_IQ_BYPASS $FSIGHT_OPENWIFI_RX_IQ_BYPASS"
+set board_def_preamble {}
+if {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10 1}
+  if {$FSIGHT_OPENWIFI_RX_IQ_BYPASS in {"1" "true"}} {
+    lappend board_def_preamble {`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1}
+  }
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-timing-a"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10_TIMING_A 1}
+  lappend board_def_preamble {`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1}
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-timing-b"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10_TIMING_B 1}
+  lappend board_def_preamble {`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1}
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-timing-c"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10_TIMING_C 1}
+  lappend board_def_preamble {`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1}
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE ne "ow-stock-20"} {
+  error "Unsupported FSIGHT_OPENWIFI_PHY_PROFILE '$FSIGHT_OPENWIFI_PHY_PROFILE'. Expected ow-stock-20, ow-nb-10, ow-nb-10-timing-a, ow-nb-10-timing-b, or ow-nb-10-timing-c."
+}
+if {[llength $board_def_preamble] > 0} {
+  set fd [open "./ip_repo/board_def.v" r]
+  set board_def_body [read $fd]
+  close $fd
+  set fd [open "./ip_repo/board_def.v" w]
+  foreach line $board_def_preamble {
+    puts $fd $line
+  }
+  puts -nonewline $fd $board_def_body
+  close $fd
+}
+set ::env(FSIGHT_OPENWIFI_BOARD_DEF) [file normalize "./ip_repo/board_def.v"]
+
 # -----------generate git rev info------------------------
 set  fd  [open  "./ip_repo/openwifi_hw_git_rev.v"  w]
 set HASHCODE [exec ../../get_git_rev.sh]

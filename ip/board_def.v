@@ -6,7 +6,166 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
-`define SAMPLING_RATE_MHZ       20
+// Timing-closure isolation: timing-c keeps timing-b and adds OW10 RX/TX timing knobs.
+`ifdef OW_PROFILE_NB10_TIMING_C
+`ifndef OW_PROFILE_NB10_TIMING_B
+`define OW_PROFILE_NB10_TIMING_B 1
+`endif
+`ifndef OW_PHY_RX_START_DELAY_2G_US
+`define OW_PHY_RX_START_DELAY_2G_US 48
+`endif
+`ifndef OW_PHY_RX_START_DELAY_5G_US
+`define OW_PHY_RX_START_DELAY_5G_US 50
+`endif
+`ifndef OW_REL_DECODING_LATENCY_MUL
+`define OW_REL_DECODING_LATENCY_MUL 50
+`endif
+`ifndef OW_TX_IQ_FILL_WAIT_US
+`define OW_TX_IQ_FILL_WAIT_US   40
+`endif
+`endif
+
+// Timing-closure isolation: timing-b keeps timing-a behavior and adds one XPU pipeline cut.
+`ifdef OW_PROFILE_NB10_TIMING_B
+`ifndef OW_PROFILE_NB10_TIMING_A
+`define OW_PROFILE_NB10_TIMING_A 1
+`endif
+`ifndef OW_XPU_PIPELINE_REL_DECODING_LATENCY
+`define OW_XPU_PIPELINE_REL_DECODING_LATENCY 1
+`endif
+`endif
+
+// Timing-closure isolation: OW10 identity and MAC xIFS constants, stock sample cadence.
+`ifdef OW_PROFILE_NB10_TIMING_A
+`ifndef OW_PROFILE_ID
+`define OW_PROFILE_ID           32'h4F573130  // "OW10"
+`endif
+`ifndef OW_PROFILE_BW_MHZ
+`define OW_PROFILE_BW_MHZ       10
+`endif
+`ifndef OW_PROFILE_META
+`define OW_PROFILE_META         32'h0001000A  // ABI 1, 10 MHz
+`endif
+`ifndef OW_SAMPLING_RATE_MHZ
+`define OW_SAMPLING_RATE_MHZ    20
+`endif
+`ifndef OW_PREAMBLE_SIGNAL_US
+`define OW_PREAMBLE_SIGNAL_US   40
+`endif
+`ifndef OW_OFDM_SYMBOL_US
+`define OW_OFDM_SYMBOL_US       8
+`endif
+`ifndef OW_SLOT_SHORT_US
+`define OW_SLOT_SHORT_US        18
+`endif
+`ifndef OW_SLOT_LONG_US
+`define OW_SLOT_LONG_US         40
+`endif
+`ifndef OW_SIFS_2G_US
+`define OW_SIFS_2G_US           20
+`endif
+`ifndef OW_SIFS_5G_US
+`define OW_SIFS_5G_US           32
+`endif
+`endif
+
+`ifdef OW_PROFILE_NB10
+`ifndef OW_PROFILE_ID
+`define OW_PROFILE_ID           32'h4F573130  // "OW10"
+`endif
+`ifndef OW_PROFILE_BW_MHZ
+`define OW_PROFILE_BW_MHZ       10
+`endif
+`ifndef OW_PROFILE_META
+`define OW_PROFILE_META         32'h0001000A  // ABI 1, 10 MHz
+`endif
+`ifndef OW_PREAMBLE_SIGNAL_US
+`define OW_PREAMBLE_SIGNAL_US   40
+`endif
+`ifndef OW_OFDM_SYMBOL_US
+`define OW_OFDM_SYMBOL_US       8
+`endif
+`ifndef OW_SLOT_SHORT_US
+`define OW_SLOT_SHORT_US        18
+`endif
+`ifndef OW_SLOT_LONG_US
+`define OW_SLOT_LONG_US         40
+`endif
+`ifndef OW_SIFS_2G_US
+`define OW_SIFS_2G_US           20
+`endif
+`ifndef OW_SIFS_5G_US
+`define OW_SIFS_5G_US           32
+`endif
+`ifndef OW_PHY_RX_START_DELAY_2G_US
+`define OW_PHY_RX_START_DELAY_2G_US 48
+`endif
+`ifndef OW_PHY_RX_START_DELAY_5G_US
+`define OW_PHY_RX_START_DELAY_5G_US 50
+`endif
+`ifndef OW_REL_DECODING_LATENCY_MUL
+`define OW_REL_DECODING_LATENCY_MUL 50
+`endif
+`ifndef OW_TX_IQ_FILL_WAIT_US
+`define OW_TX_IQ_FILL_WAIT_US   40
+`endif
+`endif
+
+`ifndef OW_PROFILE_ID
+`define OW_PROFILE_ID           32'h4F573230  // "OW20"
+`endif
+`ifndef OW_PROFILE_BW_MHZ
+`define OW_PROFILE_BW_MHZ       20
+`endif
+`ifndef OW_PROFILE_META
+`define OW_PROFILE_META         32'h00010014  // ABI 1, 20 MHz
+`endif
+`ifndef OW_PREAMBLE_SIGNAL_US
+`define OW_PREAMBLE_SIGNAL_US   20
+`endif
+`ifndef OW_OFDM_SYMBOL_US
+`define OW_OFDM_SYMBOL_US       4
+`endif
+`ifndef OW_SLOT_SHORT_US
+`define OW_SLOT_SHORT_US        9
+`endif
+`ifndef OW_SLOT_LONG_US
+`define OW_SLOT_LONG_US         20
+`endif
+`ifndef OW_SIFS_2G_US
+`define OW_SIFS_2G_US           10
+`endif
+`ifndef OW_SIFS_5G_US
+`define OW_SIFS_5G_US           16
+`endif
+`ifndef OW_PHY_RX_START_DELAY_2G_US
+`define OW_PHY_RX_START_DELAY_2G_US 24
+`endif
+`ifndef OW_PHY_RX_START_DELAY_5G_US
+`define OW_PHY_RX_START_DELAY_5G_US 25
+`endif
+`ifndef OW_REL_DECODING_LATENCY_MUL
+`define OW_REL_DECODING_LATENCY_MUL 25
+`endif
+`ifndef OW_TX_IQ_FILL_WAIT_US
+`define OW_TX_IQ_FILL_WAIT_US   20
+`endif
+`ifdef OW_PROFILE_NB10_TIMING_A
+`ifndef OW_RX_IQ_RATE_ADAPTATION_BYPASS
+`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1
+`endif
+`endif
+`ifndef OW_PROFILE_NB10
+`ifndef OW_RX_IQ_RATE_ADAPTATION_BYPASS
+`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1
+`endif
+`endif
+
+`ifndef OW_SAMPLING_RATE_MHZ
+`define OW_SAMPLING_RATE_MHZ    `OW_PROFILE_BW_MHZ
+`endif
+
+`define SAMPLING_RATE_MHZ       `OW_SAMPLING_RATE_MHZ
 `define ASSUMED_COUNTER_CLK_MHZ 10  // 10MHz is assumed in SW/driver for sub us resolutuion FPGA counters
 `define NUM_CLK_PER_SAMPLE     ((`NUM_CLK_PER_US)/`SAMPLING_RATE_MHZ)
 `define COUNT_TOP_1M           ((`NUM_CLK_PER_US)-1)

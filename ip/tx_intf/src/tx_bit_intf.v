@@ -12,7 +12,7 @@
 `define DEBUG_PREFIX
 `endif
 
-`define WAIT_FOR_TX_IQ_FILL_COUNT_TOP (20*`NUM_CLK_PER_US)
+`define WAIT_FOR_TX_IQ_FILL_COUNT_TOP (`OW_TX_IQ_FILL_WAIT_US*`NUM_CLK_PER_US)
 
 	module tx_bit_intf #
 	(

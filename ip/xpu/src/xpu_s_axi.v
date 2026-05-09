@@ -75,11 +75,11 @@
         //input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG54,
         //input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG55,
         //input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG56,
-		input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG57,
+        input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG57,
         input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG58,
         input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG59,
-        //input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG60,
-        //input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG61,
+        input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG60,
+        input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG61,
         input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG62,
         input  wire [C_S_AXI_DATA_WIDTH-1:0] SLV_REG63,
 		// User ports ends
@@ -230,8 +230,8 @@
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg57;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg58;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg59;
-	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg60;
-	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg61;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg60;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg61;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg62;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg63;
 	wire	 slv_reg_rden;
@@ -1003,8 +1003,8 @@
 	        6'h39   : reg_data_out <= slv_reg57;
 	        6'h3A   : reg_data_out <= slv_reg58;
 	        6'h3B   : reg_data_out <= slv_reg59;
-	        //6'h3C   : reg_data_out <= slv_reg60;
-	        //6'h3D   : reg_data_out <= slv_reg61;
+	        6'h3C   : reg_data_out <= slv_reg60;
+	        6'h3D   : reg_data_out <= slv_reg61;
 	        6'h3E   : reg_data_out <= slv_reg62;
 	        6'h3F   : reg_data_out <= slv_reg63;
 	        default : reg_data_out <= 0;
@@ -1047,8 +1047,8 @@
           slv_reg57 <= 32'h0;
           slv_reg58 <= 32'h0;
           slv_reg59 <= 32'h0;
-          //slv_reg60 <= 32'h0;
-          //slv_reg61 <= 32'h0;
+          slv_reg60 <= 32'h0;
+          slv_reg61 <= 32'h0;
           slv_reg62 <= 32'h0;
           slv_reg63 <= 32'h0;
         end 
@@ -1066,8 +1066,8 @@
           slv_reg57 <= SLV_REG57;
           slv_reg58 <= SLV_REG58;
           slv_reg59 <= SLV_REG59;
-          //slv_reg60 <= SLV_REG60;
-          //slv_reg61 <= SLV_REG61;
+          slv_reg60 <= SLV_REG60;
+          slv_reg61 <= SLV_REG61;
           slv_reg62 <= SLV_REG62;
           slv_reg63 <= SLV_REG63;
         end 
@@ -1075,4 +1075,3 @@
 	// User logic ends
 
 	endmodule
-

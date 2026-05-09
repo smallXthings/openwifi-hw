@@ -550,9 +550,9 @@
                 // retrans_in_progress<=retrans_in_progress;
                 // ack_timeout_count<=0;
                 if(signal_len==14)
-                   recv_ack_timeout_top <= (({4'd6, 2'd0})*`NUM_CLK_PER_US)+recv_ack_timeout_top_adj_scale;	// ack/cts uses 6 ofdm symbols at 6Mbps
+                   recv_ack_timeout_top <= ((6*ofdm_symbol_time)*`NUM_CLK_PER_US)+recv_ack_timeout_top_adj_scale;	// ack/cts uses 6 ofdm symbols at 6Mbps
                 else if(signal_len==32)
-                   recv_ack_timeout_top <= (({4'd12,2'd0})*`NUM_CLK_PER_US)+recv_ack_timeout_top_adj_scale;	// blk_ack_resp uses 12 ofdm symbols at 6Mbps
+                   recv_ack_timeout_top <= ((12*ofdm_symbol_time)*`NUM_CLK_PER_US)+recv_ack_timeout_top_adj_scale;	// blk_ack_resp uses 12 ofdm symbols at 6Mbps
             end else if ( ack_timeout_count==recv_ack_sig_valid_timeout_top_scale ) begin // sig valid timeout
                 tx_control_state<= IDLE;
                 if  ((num_retrans==retrans_limit) || (retrans_limit==0)) begin// should not run into this state. but just in case

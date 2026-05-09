@@ -5,9 +5,7 @@
 
 `timescale 1 ns / 1 ps
 
-`define COUNT_TOP_20M  ((`NUM_CLK_PER_SAMPLE)-1)
-
-`define RX_IQ_RATE_ADAPTATION_BYPASS 1
+`define COUNT_TOP_BB  ((`NUM_CLK_PER_SAMPLE)-1)
 
 	module rx_iq_intf #
 	(
@@ -46,7 +44,7 @@
     output wire wifi_rx_iq_fifo_emptyn
 	);
 
-`ifdef RX_IQ_RATE_ADAPTATION_BYPASS
+`ifdef OW_RX_IQ_RATE_ADAPTATION_BYPASS
 
     assign rf_i0 = bw20_i0;
     assign rf_q0 = bw20_q0;
@@ -159,25 +157,25 @@
     always @( posedge clk )
     begin
       if ( rstn == 0 ) begin
-        counter_top <= `COUNT_TOP_20M; // COUNT_TOP_20M is the expected value when there is no drift between front-end and baseband clock
+        counter_top <= `COUNT_TOP_BB; // Expected value when there is no drift between front-end and baseband clock.
         counter_top_flag <= 0;
       end else begin
         if (counter == 0) begin // do the check and action when an I/Q is read
           counter_top_flag <= (~counter_top_flag);
           if (fractional_flag) begin
             if (data_count<11) // if less amount of data in fifo, read slower by making counter period longer
-              counter_top <= (`COUNT_TOP_20M+1);
+              counter_top <= (`COUNT_TOP_BB+1);
             else if (data_count<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
-              counter_top <= (counter_top_flag?(`COUNT_TOP_20M):(`COUNT_TOP_20M+1));
+              counter_top <= (counter_top_flag?(`COUNT_TOP_BB):(`COUNT_TOP_BB+1));
             else // if more amount of data in fifo, read faster by making counter period shorter
-              counter_top <= (`COUNT_TOP_20M);
+              counter_top <= (`COUNT_TOP_BB);
           end else begin
             if (data_count<11) // if less amount of data in fifo, read slower by making counter period longer
-              counter_top <= (`COUNT_TOP_20M+1);
+              counter_top <= (`COUNT_TOP_BB+1);
             else if (data_count<22) // if normal amount of data in fifo, read at normal speed: baseband 20Msps
-              counter_top <= `COUNT_TOP_20M;
+              counter_top <= `COUNT_TOP_BB;
             else // if more amount of data in fifo, read faster by making counter period shorter
-              counter_top <= (`COUNT_TOP_20M-1);
+              counter_top <= (`COUNT_TOP_BB-1);
           end
         end
       end
