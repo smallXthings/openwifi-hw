@@ -6,6 +6,16 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// Timing-closure isolation: timing-d keeps timing-c and re-enables RX IQ rate adaptation.
+`ifdef OW_PROFILE_NB10_TIMING_D
+`ifndef OW_PROFILE_NB10_TIMING_C
+`define OW_PROFILE_NB10_TIMING_C 1
+`endif
+`ifndef OW_RX_IQ_RATE_ADAPTATION_NONBYPASS
+`define OW_RX_IQ_RATE_ADAPTATION_NONBYPASS 1
+`endif
+`endif
+
 // Timing-closure isolation: timing-c keeps timing-b and adds OW10 RX/TX timing knobs.
 `ifdef OW_PROFILE_NB10_TIMING_C
 `ifndef OW_PROFILE_NB10_TIMING_B
@@ -151,13 +161,17 @@
 `define OW_TX_IQ_FILL_WAIT_US   20
 `endif
 `ifdef OW_PROFILE_NB10_TIMING_A
+`ifndef OW_RX_IQ_RATE_ADAPTATION_NONBYPASS
 `ifndef OW_RX_IQ_RATE_ADAPTATION_BYPASS
 `define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1
+`endif
 `endif
 `endif
 `ifndef OW_PROFILE_NB10
+`ifndef OW_RX_IQ_RATE_ADAPTATION_NONBYPASS
 `ifndef OW_RX_IQ_RATE_ADAPTATION_BYPASS
 `define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1
+`endif
 `endif
 `endif
 
