@@ -6,6 +6,19 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// RF isolation: rf-d uses timing-c with 10 MHz sample cadence while restoring RX IQ bypass.
+`ifdef OW_PROFILE_NB10_RF_D
+`ifndef OW_PROFILE_NB10_TIMING_C
+`define OW_PROFILE_NB10_TIMING_C 1
+`endif
+`ifndef OW_SAMPLING_RATE_MHZ
+`define OW_SAMPLING_RATE_MHZ    10
+`endif
+`ifndef OW_RX_IQ_RATE_ADAPTATION_BYPASS
+`define OW_RX_IQ_RATE_ADAPTATION_BYPASS 1
+`endif
+`endif
+
 // RF isolation: rf-c keeps rf-a behavior and locally pipelines AXI-Lite write data
 // inside route-dominant OpenWiFi control slaves instead of broad interconnect slicing.
 `ifdef OW_PROFILE_NB10_RF_C
