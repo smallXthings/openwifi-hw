@@ -85,8 +85,17 @@ close $fd
 # ----end of generate fpga_scale.v---------------
 
 # -----------generate has_side_ch_flag.v---------------
+set FSIGHT_OPENWIFI_HAS_SIDE_CH "1"
+if {[info exists ::env(FSIGHT_OPENWIFI_HAS_SIDE_CH)]} {
+  set FSIGHT_OPENWIFI_HAS_SIDE_CH [string trim $::env(FSIGHT_OPENWIFI_HAS_SIDE_CH)]
+}
+puts "side_ch.tcl FSIGHT_OPENWIFI_HAS_SIDE_CH $FSIGHT_OPENWIFI_HAS_SIDE_CH"
 set  fd  [open  "./src/has_side_ch_flag.v"  w]
-puts $fd "`define HAS_SIDE_CH 1"
+if {$FSIGHT_OPENWIFI_HAS_SIDE_CH in {"0" "false"}} {
+  puts $fd "`define NO_SIDE_CH 1"
+} else {
+  puts $fd "`define HAS_SIDE_CH 1"
+}
 close $fd
 # ----end of generate has_side_ch_flag.v---------------
 

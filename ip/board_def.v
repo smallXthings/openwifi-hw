@@ -6,6 +6,14 @@
 //`define NUM_CLK_PER_US         200 // 200MHz clock for fast FPGA, like -2 and above grade Zynq7000
 //`define NUM_CLK_PER_US         100 // 100MHz clock for slow FPGA, like -1 grade Zynq7000
 
+// RX numerology implementation isolation: rxnum-d keeps the rf-e PHY/MAC/RX
+// numerology surface while the board generator disables side_ch logic.
+`ifdef OW_PROFILE_NB10_RXNUM_D
+`ifndef OW_PROFILE_NB10_RF_E
+`define OW_PROFILE_NB10_RF_E 1
+`endif
+`endif
+
 // RF isolation: rf-e keeps rf-a non-bypass behavior and pipelines RX IQ rate thresholds.
 `ifdef OW_PROFILE_NB10_RF_E
 `ifndef OW_PROFILE_NB10_RF_A

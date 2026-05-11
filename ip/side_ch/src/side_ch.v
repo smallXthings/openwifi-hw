@@ -527,14 +527,76 @@ assign m00_axis_tdata = 0;
 assign m00_axis_tstrb = 0;
 assign m00_axis_tlast = 0;
 assign s00_axis_tready = 0;
-assign s00_axi_awready = 0;
-assign s00_axi_wready = 0;
-assign s00_axi_bresp = 0;
-assign s00_axi_bvalid = 0;
-assign s00_axi_arready = 0;
-assign s00_axi_rdata = 0;
-assign s00_axi_rresp = 0;
-assign s00_axi_rvalid = 0;
+
+wire       slv_reg_wren_signal_unused;
+wire [4:0] axi_awaddr_core_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg0_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg1_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg2_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg3_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg4_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg5_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg6_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg7_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg8_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg9_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg10_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg11_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg12_unused;
+wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg19_unused;
+
+side_ch_s_axi # (
+  .C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
+  .C_S_AXI_ADDR_WIDTH(C_S00_AXI_ADDR_WIDTH)
+) side_ch_s_axi_i (
+  .slv_reg_wren_signal(slv_reg_wren_signal_unused),
+  .axi_awaddr_core(axi_awaddr_core_unused),
+  .S_AXI_ACLK(s00_axi_aclk),
+  .S_AXI_ARESETN(s00_axi_aresetn),
+  .S_AXI_AWADDR(s00_axi_awaddr),
+  .S_AXI_AWPROT(s00_axi_awprot),
+  .S_AXI_AWVALID(s00_axi_awvalid),
+  .S_AXI_AWREADY(s00_axi_awready),
+  .S_AXI_WDATA(s00_axi_wdata),
+  .S_AXI_WSTRB(s00_axi_wstrb),
+  .S_AXI_WVALID(s00_axi_wvalid),
+  .S_AXI_WREADY(s00_axi_wready),
+  .S_AXI_BRESP(s00_axi_bresp),
+  .S_AXI_BVALID(s00_axi_bvalid),
+  .S_AXI_BREADY(s00_axi_bready),
+  .S_AXI_ARADDR(s00_axi_araddr),
+  .S_AXI_ARPROT(s00_axi_arprot),
+  .S_AXI_ARVALID(s00_axi_arvalid),
+  .S_AXI_ARREADY(s00_axi_arready),
+  .S_AXI_RDATA(s00_axi_rdata),
+  .S_AXI_RRESP(s00_axi_rresp),
+  .S_AXI_RVALID(s00_axi_rvalid),
+  .S_AXI_RREADY(s00_axi_rready),
+
+  .SLV_REG0(slv_reg0_unused),
+  .SLV_REG1(slv_reg1_unused),
+  .SLV_REG2(slv_reg2_unused),
+  .SLV_REG3(slv_reg3_unused),
+  .SLV_REG4(slv_reg4_unused),
+  .SLV_REG5(slv_reg5_unused),
+  .SLV_REG6(slv_reg6_unused),
+  .SLV_REG7(slv_reg7_unused),
+  .SLV_REG8(slv_reg8_unused),
+  .SLV_REG9(slv_reg9_unused),
+  .SLV_REG10(slv_reg10_unused),
+  .SLV_REG11(slv_reg11_unused),
+  .SLV_REG12(slv_reg12_unused),
+  .SLV_REG19(slv_reg19_unused),
+  .SLV_REG20({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG21({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG22({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG26({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG27({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG28({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG29({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG30({C_S00_AXI_DATA_WIDTH{1'b0}}),
+  .SLV_REG31({C_S00_AXI_DATA_WIDTH{1'b0}})
+);
 
 `endif
 

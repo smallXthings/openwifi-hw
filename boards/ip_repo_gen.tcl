@@ -35,6 +35,7 @@ if {$FSIGHT_OPENWIFI_RX_IQ_BYPASS ni {"0" "1" "false" "true"}} {
 puts "ip_repo_gen.tcl FSIGHT_OPENWIFI_PHY_PROFILE $FSIGHT_OPENWIFI_PHY_PROFILE"
 puts "ip_repo_gen.tcl FSIGHT_OPENWIFI_RX_IQ_BYPASS $FSIGHT_OPENWIFI_RX_IQ_BYPASS"
 set board_def_preamble {}
+set has_side_ch 1
 if {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10 1}
   if {$FSIGHT_OPENWIFI_RX_IQ_BYPASS in {"1" "true"}} {
@@ -57,6 +58,9 @@ if {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_RF_A 1}
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-e"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_RF_E 1}
+} elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rxnum-d"} {
+  lappend board_def_preamble {`define OW_PROFILE_NB10_RXNUM_D 1}
+  set has_side_ch 0
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-d"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_RF_D 1}
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-c"} {
@@ -64,7 +68,7 @@ if {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10"} {
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE eq "ow-nb-10-rf-b"} {
   lappend board_def_preamble {`define OW_PROFILE_NB10_RF_B 1}
 } elseif {$FSIGHT_OPENWIFI_PHY_PROFILE ne "ow-stock-20"} {
-  error "Unsupported FSIGHT_OPENWIFI_PHY_PROFILE '$FSIGHT_OPENWIFI_PHY_PROFILE'. Expected ow-stock-20, ow-nb-10, ow-nb-10-timing-a, ow-nb-10-timing-b, ow-nb-10-timing-c, ow-nb-10-timing-d, ow-nb-10-timing-e, ow-nb-10-rf-a, ow-nb-10-rf-b, ow-nb-10-rf-c, ow-nb-10-rf-d, or ow-nb-10-rf-e."
+  error "Unsupported FSIGHT_OPENWIFI_PHY_PROFILE '$FSIGHT_OPENWIFI_PHY_PROFILE'. Expected ow-stock-20, ow-nb-10, ow-nb-10-timing-a, ow-nb-10-timing-b, ow-nb-10-timing-c, ow-nb-10-timing-d, ow-nb-10-timing-e, ow-nb-10-rf-a, ow-nb-10-rf-b, ow-nb-10-rf-c, ow-nb-10-rf-d, ow-nb-10-rf-e, or ow-nb-10-rxnum-d."
 }
 if {[llength $board_def_preamble] > 0} {
   set fd [open "./ip_repo/board_def.v" r]
@@ -88,7 +92,8 @@ close $fd
 
 # -----------generate has_side_ch_flag.v------------------
 # if you want NO side_ch, please use set has_side_ch 0
-set has_side_ch 1 
+puts "ip_repo_gen.tcl has_side_ch $has_side_ch"
+set ::env(FSIGHT_OPENWIFI_HAS_SIDE_CH) $has_side_ch
 set  fd  [open  "./ip_repo/has_side_ch_flag.v"  w]
 if {$has_side_ch > 0} {
   puts $fd "`define HAS_SIDE_CH 1"
